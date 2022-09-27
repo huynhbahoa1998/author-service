@@ -1,83 +1,53 @@
 package com.example.authorservice.mapper;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.example.authorservice.converter.AuthorConverter;
+import com.example.authorservice.dto.AuthorDTO;
 import com.example.authorservice.model.Author;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Component
 public class AuthorMapper {
 
-    private final String TABLE_NAME = "Author";
+    public static final String AUTHOR_UUID = "Uuid";
 
-    private final DynamoDB dynamoDB;
+    public static final String AUTHOR_FIRST_NAME = "FirstName";
 
-    private final Table table;
+    public static final String AUTHOR_LAST_NAME = "LastName";
 
-    private final AuthorConverter authorConverter;
+    public static final String AUTHOR_EMAIL = "Email";
 
-    @Autowired
-    public AuthorMapper(AmazonDynamoDB amazonDynamoDB, AuthorConverter authorConverter) {
-        this.authorConverter = authorConverter;
-        this.dynamoDB = new DynamoDB(amazonDynamoDB);
-        this.table = dynamoDB.getTable(TABLE_NAME);
+    public Item mapAuthorToItem(Author author) {
+        return new Item()
+                .withPrimaryKey(AUTHOR_UUID, author.getUuid())
+                .withString(AUTHOR_FIRST_NAME, author.getFirstName())
+                .withString(AUTHOR_LAST_NAME, author.getLastName())
+                .withString(AUTHOR_EMAIL, author.getEmail());
     }
 
-    public Author create(Author author) {
-        table.putItem(authorConverter.convertAuthorToItem(author));
-        return author;
+    public Author mapItemToAuthor(Item item) {
+        return Author.builder()
+                .uuid(item.getString(AUTHOR_UUID))
+                .firstName(item.getString(AUTHOR_FIRST_NAME))
+                .lastName(item.getString(AUTHOR_LAST_NAME))
+                .email(item.getString(AUTHOR_EMAIL))
+                .build();
     }
 
-    public List<Author> findAll() {
-        List<Author> authors = new ArrayList<>();
-        table.scan().forEach(item -> authors.add(authorConverter.convertItemToAuthor(item)));
-        return authors;
+    public AuthorDTO mapAuthorToAuthorDTO(Author author) {
+        return AuthorDTO.builder()
+                .uuid(author.getUuid())
+                .firstName(author.getFirstName())
+                .lastName(author.getLastName())
+                .email(author.getEmail())
+                .build();
     }
 
-    public Author findById(String uuid) {
-        Item item = table.getItem(authorConverter.AUTHOR_UUID, uuid);
-        if (item != null) {
-            return authorConverter.convertItemToAuthor(item);
-        } else {
-            return null;
-        }
-    }
-
-    public Author update(String uuid, Author author) {
-        Map<String, String> expressionAttributeNames = new HashMap<>();
-        expressionAttributeNames.put("#F", authorConverter.AUTHOR_FIRST_NAME);
-        expressionAttributeNames.put("#L", authorConverter.AUTHOR_LAST_NAME);
-        expressionAttributeNames.put("#E", authorConverter.AUTHOR_EMAIL);
-
-        Map<String, Object> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":f", author.getFirstName());
-        expressionAttributeValues.put(":l", author.getLastName());
-        expressionAttributeValues.put(":e", author.getEmail());
-
-        table.updateItem(
-                authorConverter.AUTHOR_UUID,
-                uuid,
-                "set #F = :f, #L = :l, #E = :e",
-                expressionAttributeNames,
-                expressionAttributeValues);
-
-        return author;
-    }
-
-    public Author deleteById(String uuid) {
-        Author author = this.findById(uuid);
-        if (author != null) {
-            table.deleteItem(authorConverter.AUTHOR_UUID, uuid);
-        }
-        return author;
+    public Author mapAuthorDTOToAuthor(AuthorDTO authorDTO) {
+        return Author.builder()
+                .uuid(authorDTO.getUuid())
+                .firstName(authorDTO.getFirstName())
+                .lastName(authorDTO.getLastName())
+                .email(authorDTO.getEmail())
+                .build();
     }
 }

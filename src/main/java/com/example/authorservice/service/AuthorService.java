@@ -1,18 +1,14 @@
 package com.example.authorservice.service;
 
-import com.example.authorservice.model.Author;
-
-import java.util.List;
+import com.example.authorservice.dto.AuthorDTO;
 
 public interface AuthorService {
 
-    Author create(Author author);
+    AuthorDTO create(AuthorDTO authorDTO);
 
-    List<Author> findAll();
+    AuthorDTO findById(String uuid);
 
-    Author findById(String uuid);
+    AuthorDTO update(String uuid, AuthorDTO author);
 
-    Author updateAuthor(String uuid, Author author);
-
-    Author deleteById(String uuid);
+    AuthorDTO deleteById(String uuid);
 }
